@@ -1,0 +1,14 @@
+[Unit]
+Description=mozjpeg web application
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/taris/
+ExecStart=
+ExecStop=/bin/kill -INT ${MAINPID}
+User=
+Group=
+
+[Install]
+WantedBy=multi-user.target
