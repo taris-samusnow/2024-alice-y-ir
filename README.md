@@ -4,21 +4,27 @@
 |||
 | ---- | ---- |
 | 実機 | Raspberry Pi 2Model B v1.1 |
-| OS   | Raspbian GNU/Linux 12 (bookworm) |
-| 言語環境 | Python 3.11.2 |
+| OS   | Raspbian GNU/Linux 12 (bookworm) - RASPBERRY PI OS (LEGACY, 32-BIT) Lite|
+| 言語環境 | Python 3.9.2 |
 | 音声入力デバイス| ASUSTek Computer, Inc. Xonar U3 sound card |
 
 ## 環境構築
-### サウンドカードの設定
-```bash 
+### Python 実行用環境構築
+```bash
+$ sudo apt-get update
+$ sudo apt-get -y upgrade
+$ sudo apt-get -y install python3-pip git python3-venv vim libopenblas-base portaudio19-dev
+```
 
+### サウンドカードの設定
+```bash
 $ cat /proc/asound/modules
   0 snd_bcm2835
   1 vc4
   2 snd_usb_audio
 
 # 以下のようにファイルを生成
-$ sudo tee /etc/modprobe.d/alsa-base.conf_ << EOF
+$ sudo tee /etc/modprobe.d/alsa-base.conf << EOF
 options snd slots=snd_usb_audio,snd_bcm2835
 options snd_usb_audio index=0
 options snd_bcm2835 index=1
@@ -32,6 +38,13 @@ $ cat /proc/asound/modules
    1 snd_bcm2835
    2 vc4
 
+# raspi-config でも USB Advanced Audio Device を改めて選択
+$ sudo raspi-config
+  1 System Options       Configure system settings ⇒ Enter
+    S2 Audio             Select audio out through HDMI or 3.5mm jack ⇒ Enter
+      0 USB Advanced Audio Device  ⇒ Enter
+  ⇒ Esc で終了
+
 # 音声再生、録音のゲイン調整
 $ alsamixer
 
@@ -39,27 +52,23 @@ $ alsamixer
 $ arecord -D plughw:0,0 -c 2 -f S16_LE -r 44100  | aplay
  ```
 
-### Python 実行環境構築
-```bash 
+### Lチカ スピーカー プログラム実行用環境構築
+```bash
 $ cd ~
 $ python -m venv vpyenv
 $ source ${PWD}/vpyenv/bin/activate
 $ echo "source ${PWD}/vpyenv/bin/activate" >> .bashrc
-$ pip install numpy
-$ pip install sounddevice
-$ pip install RPi.GPIO
-$ pip install python-dotenv
-
-# その他 aptで必要なライブラリをインストールする
+$ pip install numpy sounddevice RPi.GPIO python-dotenv
 ```
 
 ### 自動起動設定
 ```bash 
 $ git clone https://github.com/taris-samusnow/2024-alice-y-ir.git
 $ cd 2024-alice-y-ir
-
-$ vi ay_lspeaker.service
+$ vim ay_lspeaker.service
   # 以下の例を参考に書き換える
+  # 作業ディレクトリは実行ユーザのホームディレクトリを指定
+  WorkingDirectory=/home/taris/
   # Python 仮想環境の python への絶対パスと実行するファイルへの絶対パスを指定する
   ExecStart=/home/taris/vpyenv/bin/python /home/taris/2024-alice-y-ir/ay_lspeaker.py
   # 実行するユーザ名、グループの指定する
@@ -67,7 +76,7 @@ $ vi ay_lspeaker.service
   Group=taris
 
 $ sudo cp ay_lspeaker.service /etc/systemd/system/
-# serviceの起動と起動状況の確認する
+# serviceの起動と起動状況を確認する
 $ sudo systemctl start ay_lspeaker.service
 $ sudo systemctl status ay_lspeaker.service
   # Active: active (running) となっていれば OK
