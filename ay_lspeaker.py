@@ -182,13 +182,13 @@ def main(chunk_size=8000):
                 continue
     except KeyboardInterrupt:  # Ctrl-C (MacだとCommand-C) で強制終了
         PWM_OFF()
-        # print("\n＜収録終了＞")
+        print("\n＜収録終了＞")
     except Exception as e:
         PWM_OFF()
-        # print("\n＜収録終了＞")
+        print("\n＜収録終了＞")
     finally:
         PWM_OFF()
-        # print("\n＜収録終了＞")
+        print("\n＜収録終了＞")
 
 def PWM_INIT():
     # print("PWM-INIT")
