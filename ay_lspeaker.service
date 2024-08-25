@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/taris/
+WorkingDirectory=
 ExecStart=
 ExecStop=/bin/kill -INT ${MAINPID}
 User=
