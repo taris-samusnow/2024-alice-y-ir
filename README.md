@@ -9,6 +9,36 @@
 | 音声入力デバイス| ASUSTek Computer, Inc. Xonar U3 sound card |
 
 ## 環境構築
+### サウンドカードの設定
+```bash 
+
+$ cat /proc/asound/modules
+  0 snd_bcm2835
+  1 vc4
+  2 snd_usb_audio
+
+# 以下のようにファイルを生成
+$ sudo tee /etc/modprobe.d/alsa-base.conf_ << EOF
+options snd slots=snd_usb_audio,snd_bcm2835
+options snd_usb_audio index=0
+options snd_bcm2835 index=1
+EOF
+
+# 端末を再起動し、alsa-base.confが正常に読み込まれることを確認
+$ sudo reboot
+# snd_usb_audio が 0 番目のデバイスになっていることを確認
+$ cat /proc/asound/modules
+   0 snd_usb_audio
+   1 snd_bcm2835
+   2 vc4
+
+# 音声再生、録音のゲイン調整
+$ alsamixer
+
+# 実機確認 録音⇒再生 が可能なことを確認
+$ arecord -D plughw:0,0 -c 2 -f S16_LE -r 44100  | aplay
+ ```
+
 ### Python 実行環境構築
 ```bash 
 $ cd ~
@@ -52,8 +82,10 @@ $ sudo systemctl status ay_lspeaker.service
   # Active: inactive (dead)となっていれば OK
 ````
 
-# パラメーター編集
+## パラメーター編集
 ```bash
 # 実機状況やGPIOの配線などに合わせて編集する
 vi .env
 ```
+
+## 参考サイト
