@@ -98,3 +98,5 @@ vi .env
 ```
 
 ## 参考サイト
+[音声パワーと基本周波数をリアルタイムでモニタリングするスクリプトをPythonで書いた話 - 備忘録](https://tam5917.hatenablog.com/entry/2023/12/16/154930)
+- [関連プログラム](https://gist.github.com/tam17aki/7a766b263ebc08752539ecdff9514298)
