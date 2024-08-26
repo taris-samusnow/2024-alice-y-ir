@@ -1,5 +1,12 @@
 # 2024年　夢宮ありす夏の自由研究 
 # Lチカ スピーカー(Ver. Prototype) 作ってみた
+## 実機動作
+### 裏返しQuestion
+[裏返しQuestion 実機動作 - youtube](https://youtu.be/WOVJcwIXOF4)
+
+### I'm Home
+[I'm Home 実機動作 - youtube](https://youtu.be/4VQbO1dTzNg)
+
 ## 実行環境
 |||
 | ---- | ---- |
@@ -7,6 +14,7 @@
 | OS   | Raspbian GNU/Linux 12 (bookworm) - RASPBERRY PI OS (LEGACY, 32-BIT) Lite|
 | 言語環境 | Python 3.9.2 |
 | 音声入力デバイス| ASUSTek Computer, Inc. Xonar U3 sound card |
+
 
 ## 環境構築
 ### Python 実行用環境構築
