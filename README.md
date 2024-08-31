@@ -7,7 +7,7 @@
 ### I'm Home
 [I'm Home 実機動作 - youtube](https://youtu.be/4VQbO1dTzNg)
 
-## 実行環境
+## 第 1 実行環境
 |||
 | ---- | ---- |
 | 実機 | Raspberry Pi 2Model B v1.1 |
@@ -102,8 +102,46 @@ $ sudo systemctl status ay_lspeaker.service
 ## パラメーター編集
 ```bash
 # 実機状況やGPIOの配線などに合わせて編集する
-vi .env
+$ vim .env
 ```
+-------------------------------------------------------------------------
+## 第 2 実行環境
+|||
+| ---- | ---- |
+| 実機 | LattePanda V1 DFR0444|
+| OS   | Winows 10 Home |
+| 言語環境 | Python 3.7.6(Anaconda 2020.02 for 32-bit Windows) |
+| 音声入力デバイス| ASUSTek Computer, Inc. Xonar U3 sound card |
+
+### Windows用 インストールパッケージ
+- Git for Windows(2.46.0.windows.1)
+- Anaconda 2020.02 for 64-bit Windows with Python 3.7
+- オプション設定 : [LattePanda 公式ドキュメント：Remote Desktop](https://docs.lattepanda.com/content/1st_edition/tools/#remote-desktop)
+
+### Lチカ スピーカー プログラム実行用環境構築
+```ps
+PS > pip install sounddevice python-dotenv pyFirmata
+```
+
+- LattePanda V1 の Arduino デバイスセットアップ  
+  [LattePanda 公式ドキュメント：Step 2: Set Up the Arduino](https://docs.lattepanda.com/content/1st_edition/vs_programming/#step-2-set-up-the-arduino)
+
+- オプション設定 : SSH Server インストール 
+```ps
+# 管理者モード
+PS > Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+PS > Start-Service sshd
+PS > Set-Service -Name sshd -StartupType 'Automatic'
+# ファイアウォールにて sshd の通信を許可する
+```
+### 自動起動設定
+```ps
+$ git clone https://github.com/taris-samusnow/2024-alice-y-ir.git
+```
+更新中
+
+## パラメーター編集
+`.env`をテキストエディタで編集
 
 ## 参考サイト
 [音声パワーと基本周波数をリアルタイムでモニタリングするスクリプトをPythonで書いた話 - 備忘録](https://tam5917.hatenablog.com/entry/2023/12/16/154930)
