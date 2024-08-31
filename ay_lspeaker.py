@@ -20,6 +20,7 @@ DURATION        = float(os.getenv('DURATION'))
 BA_DIFF         = float(os.getenv('BA_DIFF'))
 SP              = float(os.getenv('SP'))
 
+FUCN2           = int(os.getenv('FUCN2'))
 PWM0            = int(os.getenv('PWM0'))
 PWM1            = int(os.getenv('PWM1'))
 GPIO_PWM0       = int(os.getenv('GPIO_PWM0'))
@@ -132,11 +133,14 @@ def main(chunk_size=8000):
     PWM_INIT()
 
     # 起動 を LED点灯で示す
-    PWM0.ChangeDutyCycle(100)
-    PWM1.ChangeDutyCycle(100)
-    time.sleep(1)
-    PWM_STOP()
 
+    if FUCN2 == 1:
+      PWM_STANDBY()
+    else:
+      PWM0.ChangeDutyCycle(100)
+      PWM1.ChangeDutyCycle(100)
+      time.sleep(1)
+      PWM_STOP()
     PWM_START()
 
     try:
@@ -158,7 +162,10 @@ def main(chunk_size=8000):
                 # SP以下のデジベルは無音区間として扱う
                 if power <= SP:
                   if pwm_flag == True:
-                    PWM_STOP()
+                    if FUCN2 == 1:
+                      PWM_STANDBY()
+                    else:
+                      PWM_STOP()
                     pwm_flag = False
                 else:
                   if pwm_flag == False:
@@ -176,7 +183,8 @@ def main(chunk_size=8000):
                       
                   # PWMによりライトの強弱を操作する。
                   PWM0.ChangeDutyCycle(freq)
-                  PWM1.ChangeDutyCycle(freq)
+                  if FUCN2 == 0:
+                    PWM1.ChangeDutyCycle(freq)
                   
                   bf_specmax = power
                 continue
@@ -201,18 +209,28 @@ def PWM_INIT():
     # PWMに使うピンと周波数(1秒間に10回)を設定します
     PWM0 = GPIO.PWM(GPIO_PWM0, PWM_HZ)
     PWM1 = GPIO.PWM(GPIO_PWM1, PWM_HZ)
-
+    if FUCN2 == 1:
+      PWM1.start(0)
     PWM_START()
     return
 
 def PWM_START():
     # print("PWM-START")
     PWM0.start(0)
-    PWM1.start(0)
+    if FUCN2 == 1:
+      PWM1.ChangeDutyCycle(100)
+    else:
+      PWM1.start(0)
+    return
+
+def PWM_STANDBY():
+    #print("PWM-STANDBY")
+    PWM0.stop()
+    PWM1.ChangeDutyCycle(100)
     return
 
 def PWM_STOP():
-    # print("PWM-STOP")
+    #print("PWM-STOP")
     PWM0.stop()
     PWM1.stop()
     return
