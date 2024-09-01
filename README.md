@@ -171,10 +171,14 @@ PS > schtasks /run /TN "ay_lspeaker"
 # デバッグ操作：タスクの停止
 PS > schtasks /end /TN "ay_lspeaker"
 ```
-- 一部、GUIにて設定
 
-# サウンド設定で入力/出力デバイスを指定する
-デバイス ⇒ 再生／録音　タブにてそれぞれ 既定のデバイスを設定する
+- 一部、タスクスケジューラのGUIにて設定を行う 
+  以下、赤枠の部分を設定してOKを押下
+  ![image](https://github.com/user-attachments/assets/80bd4abe-e238-4d7b-a92d-241d47941f78)
+
+# サウンド設定で入力/出力デバイスを指定する  
+デバイス ⇒ 再生／録音　タブにてそれぞれ 既定のデバイスを設定する（以下は参考例）
+![image](https://github.com/user-attachments/assets/a7cd228e-fe96-4bdc-a74e-249cd301f10e)
 
 
 ## パラメーター編集
