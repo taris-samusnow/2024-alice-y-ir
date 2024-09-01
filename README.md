@@ -119,29 +119,72 @@ $ vim .env
 - オプション設定 : [LattePanda 公式ドキュメント：Remote Desktop](https://docs.lattepanda.com/content/1st_edition/tools/#remote-desktop)
 
 ### Lチカ スピーカー プログラム実行用環境構築
-```ps
-PS > pip install sounddevice python-dotenv pyFirmata
-```
+- Python ライブラリ
+  ```ps
+  PS > pip install sounddevice python-dotenv pyFirmata
+  ```
 
 - LattePanda V1 の Arduino デバイスセットアップ  
   [LattePanda 公式ドキュメント：Step 2: Set Up the Arduino](https://docs.lattepanda.com/content/1st_edition/vs_programming/#step-2-set-up-the-arduino)
 
-- オプション設定 : SSH Server インストール 
-```ps
-# 管理者モード
-PS > Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-PS > Start-Service sshd
-PS > Set-Service -Name sshd -StartupType 'Automatic'
-# ファイアウォールにて sshd の通信を許可する
-```
+- オプション設定 : SSH Server インストール
+  [MicroSoft 公式ドキュメント : Windows 用 OpenSSH の概要](https://learn.microsoft.com/ja-jp/windows-server/administration/openssh/openssh_install_firstuse?tabs=powershell&pivots=windows-server-2019)
+
+- デフォルト起動ターミナル を PowerShell に変更
+  ```ps
+  PS > Get-Command powershell | Format-Table -AutoSize -Wrap
+  
+  CommandType Name           Version         Source
+  ----------- ----           -------         ------
+  Application powershell.exe 10.0.19041.3996 C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+  
+  # OpenSSH のレジストリーエントリーに DefaultShell=PowerShell を設定
+  # PowerShell の PATH は上で確認した PATH を指定する
+  PS > New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -PropertyType String -Force
+  ```
+
 ### 自動起動設定
 ```ps
-$ git clone https://github.com/taris-samusnow/2024-alice-y-ir.git
+PS > git clone https://github.com/taris-samusnow/2024-alice-y-ir.git
+PS > cd 2024-alice-y-ir
+
+# 各コマンド結果を用いてタスクスケジューラに必要な情報を入手（以下は例）
+PS > Convert-Path ay_lspeaker_lattepandav1.py
+  C:\Users\Rei\2024-alice-y-ir\ay_lspeaker_lattepandav1.py
+PS > $(Get-Command python).Source
+  C:\Users\Rei\anaconda3\python.exe
+PS > whoami
+  desktop-65f2vce\Rei
+# タスクスケジューラを作成
+PS > schtasks /create /sc ONSTART /tn "ay_lspeaker" /tr "'C:\Users\Rei\anaconda3\python.exe' 'C:\Users\Rei\2024-alice-y-ir\ay_lspeaker_lattepandav1.py'" /RU desktop-65f2vce\Rei
+  成功: スケジュール タスク "ay_lspeaker" は正しく作成されました。
+
+# タスクが作成されたことを確認
+PS > schtasks /Query /TN "ay_lspeaker"     
+  フォルダー\
+  タスク名                                 次回の実行時刻         状態
+  ======================================== ====================== ===============
+  ay_lspeaker                              N/A                    準備完了 
+
+# デバッグ操作：タスクの開始
+PS > schtasks /run /TN "ay_lspeaker"
+# デバッグ操作：タスクの停止
+PS > schtasks /end /TN "ay_lspeaker"
 ```
-更新中
+- 一部、GUIにて設定
+
+# サウンド設定で入力/出力デバイスを指定する
+デバイス ⇒ 再生／録音　タブにてそれぞれ 既定のデバイスを設定する
+
 
 ## パラメーター編集
 `.env`をテキストエディタで編集
+
+## 台座用 LED発光パターンについて
+|.env 変数|値|--|
+| ---- | ---- | ---- |
+|FUCN2 |0|音声同期|
+|FUCN2 |1|点灯|
 
 ## 参考サイト
 [音声パワーと基本周波数をリアルタイムでモニタリングするスクリプトをPythonで書いた話 - 備忘録](https://tam5917.hatenablog.com/entry/2023/12/16/154930)
