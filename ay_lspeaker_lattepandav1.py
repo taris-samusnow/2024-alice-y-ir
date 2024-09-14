@@ -10,7 +10,7 @@ import numpy as np
 import sounddevice as sd
 from pyfirmata import Arduino, util
 import signal
-
+import threading
 from dotenv import load_dotenv
 
 #.env ファイルより値を読み込む 
@@ -25,16 +25,25 @@ PWM0            = int(os.getenv('PWM0'))
 PWM1            = int(os.getenv('PWM1'))
 GPIO_PWM0       = int(os.getenv('GPIO_PWM0'))
 GPIO_PWM1       = int(os.getenv('GPIO_PWM1'))
+GPIO_PWM3       = str(os.getenv('GPIO_PWM3'))
 GPIO_PWM5       = str(os.getenv('GPIO_PWM5'))
 GPIO_PWM6       = str(os.getenv('GPIO_PWM6'))
+GPIO_PWM11      = str(os.getenv('GPIO_PWM11'))
 PWM_HZ          = int(os.getenv('PWM_HZ'))
 INPUT_CHANNELS  = int(os.getenv('INPUT_CHANNELS'))
 OUTPUT_CHANNELS = int(os.getenv('OUTPUT_CHANNELS'))
 
 gboard          = Arduino('COM3')
 
+gpin3           = 0
 gpin5           = 0
 gpin6           = 0
+gpin11          = 0
+gred            = 0
+ggreen          = 0
+gblue           = 0
+gthread1        = 0
+gflag_color_palet_end = True
 
 class MicrophoneStream:
     """マイク音声入力のためのクラス."""
@@ -118,14 +127,103 @@ class MicrophoneStream:
         power = 20 * math.log10(rms) if rms > 0.0 else -math.inf  # RMSからデシベルへ
 
         return power
+    
+def color_palet():
+  global gred
+  global ggreen
+  global gblue
+  global gflag_color_palet_end
 
+  #light_list = [
+  #  [0,1,1],
+  #  [0,0.9555,1],
+  #  [0,0.655,1],
+  #  [1,0,1],
+  #  [1,1,0],
+  #  [0.1,0.95,0.3],
+  #  [0,1,0.755]
+  #]
+
+  #while gflag_color_palet_end:
+  #  for i in range(len(light_list)):      
+  #    gred,ggreen,gblue = light_list[i]
+  #    time.sleep(0.2)
+  #
+  #return
+
+  while gflag_color_palet_end:
+      while gflag_color_palet_end:
+        ggreen = ggreen - 0.0001
+        if ggreen <= 0.6550:
+          break
+      
+      while gflag_color_palet_end:
+        gred = gred + 0.0001
+        ggreen = ggreen - 0.0001
+        if ggreen < 0:
+          ggreen = 0
+        if gred >= 1:
+          break
+  
+      while gflag_color_palet_end:
+        ggreen = ggreen + 0.0001
+        gblue = gblue - 0.0001
+        if gblue <= 0:
+          gblue = 0
+          break
+  
+      while gflag_color_palet_end:
+        gred = gred - 0.0001
+        ggreen = ggreen - 0.0001
+        gblue = gblue + 0.0001
+        if ggreen < 0.9500:
+          ggreen = 0.9500
+        if gblue > 0.3000:
+          gblue = 0.3000
+        if gred <= 0.1000:
+          break
+  
+      while gflag_color_palet_end:
+        gred = gred - 0.0001
+        ggreen = ggreen + 0.0001
+        gblue = gblue + 0.0001
+        if gred < 0:
+          gred = 0
+        if ggreen > 1:
+          ggreen = 1
+        if gblue >= 0.7550:
+          break
+  
+      while gflag_color_palet_end:
+        ggreen = ggreen - 0.0001
+        gblue = gblue - 0.0001
+        if gblue <= 0:
+          gblue = 0
+        if ggreen <= 0:
+          gblue = 0
+          ggreen = 0
+          break
+    
+      while gflag_color_palet_end:
+        ggreen = ggreen + 0.0001
+        gblue = gblue + 0.0001
+        if gblue >= 1:
+          gblue = 1
+        if ggreen >= 1:
+          gblue = 1
+          ggreen = 1
+          break
 
 def main(chunk_size=8000):
-
     """音量と基本周波数をモニタリングするデモンストレーションを実行.
     Args:
        chunk_size (int): 音声データを受け取る単位（サンプル数）
     """
+    global gred
+    global ggreen
+    global gblue
+    global gflag_color_palet_end
+
     # 入力デバイス情報に基づき、サンプリング周波数の情報を取得
     input_device_info = sd.query_devices(kind="input")
     sample_rate = int(input_device_info["default_samplerate"])
@@ -135,7 +233,7 @@ def main(chunk_size=8000):
     
     bf_specmax = 0 
     pwm_flag = True
-    
+    thread1 = threading.Thread(target=color_palet)
     # GPIO 初期化処理
     PWM_INIT()
 
@@ -144,7 +242,7 @@ def main(chunk_size=8000):
       PWM_STANDBY()
     else:
       gpin5.write(1)
-      gpin6.write(1)
+      gpin11.write(1)
       time.sleep(1)
       PWM_STOP()
     PWM_START()
@@ -152,6 +250,7 @@ def main(chunk_size=8000):
     try:
         #print("＜収録開始＞")
         mic_stream.open_stream()  # 入力ストリームを開く準備
+        thread1.start()
         with mic_stream.input_stream:  # 入力ストリームから音声取得
             audio_generator = mic_stream.generator()  # 音声データ（のカタマリ）
             for data in audio_generator:  # チャンクごとに情報を表示してモニタリング
@@ -189,66 +288,99 @@ def main(chunk_size=8000):
                       freq = 0
                   freq=freq/100
                   # PWMによりライトの強弱を操作する。
-                  gpin5.write(freq)
+                  #gpin3.write(1.0-freq)
+                  #gpin5.write(1.0-freq)
+                  #gpin6.write(1.0-freq)
+                  if freq == 0:
+                    gpin5.write(1)
+                    gpin6.write(1)
+                    gpin3.write(1)
+                  else:
+                    gpin5.write(gred)
+                    green = ggreen * 1.5
+                    if (green) > 1:
+                      green = 1
+                    gpin6.write(green)
+                    gpin3.write(gblue)
+
                   if FUCN2 == 0:
-                    gpin6.write(freq)
+                    gpin11.write(freq)
                   
                   bf_specmax = power
                 continue
     except KeyboardInterrupt:  # Ctrl-C (MacだとCommand-C) で強制終了
-        PWM_OFF()
-        print("\n＜収録終了＞")
+        print("\nKeyboardInterrupt")
     except Exception as e:
-        PWM_OFF()
-        print("\n＜収録終了＞")
+        print("\nException")
     finally:
+        gflag_color_palet_end = False
         PWM_OFF()
+        thread1.join()
         print("\n＜収録終了＞")
 
 def PWM_INIT():
     # print("PWM-INIT")
+    global gpin3
     global gpin5
     global gpin6
+    global gpin11
+
+    gpin3           = gboard.get_pin(GPIO_PWM3)
     gpin5           = gboard.get_pin(GPIO_PWM5)
     gpin6           = gboard.get_pin(GPIO_PWM6)
+    gpin11          = gboard.get_pin(GPIO_PWM11)
     
+    #アノードコモンのため 1 で消灯
+    gpin3.write(1)
+    gpin5.write(1)
+    gpin6.write(1)
+
     if FUCN2 == 1:
-      gpin6.write(0)
+      gpin11.write(0)
     PWM_START()
     return
 
 def PWM_START():
     # print("PWM-START")
-    gpin5.write(0)
+    gpin3.write(1)
+    gpin5.write(1)
+    gpin6.write(1)
     if FUCN2 == 1:
-      gpin6.write(1)
+      gpin11.write(1)
     else:
-      gpin6.write(0)
+      gpin11.write(0)
     return
 
 def PWM_STANDBY():
     #print("PWM-STANDBY")
-    gpin5.write(0)
+    gpin3.write(1)
+    gpin5.write(1)
     gpin6.write(1)
+    gpin11.write(1)
     return
 
 def PWM_STOP():
     #print("PWM-STOP")
-    gpin5.write(0)
-    gpin6.write(0)
+    gpin3.write(1)
+    gpin5.write(1)
+    gpin6.write(1)
+    gpin11.write(0)
     return
 
 def PWM_OFF():
-    # print("PWM-OFF")
-    gpin5.write(0)
-    gpin6.write(0)
+    print("PWM-OFF")
+    gpin3.write(1)
+    gpin5.write(1)
+    gpin6.write(1)
+    gpin11.write(0)
     gboard.exit()
     return
 
 def handler(signum, frame):
-    PWM_OFF()
-    # print("\n＜収録終了＞")
-    pass
+  gflag_color_palet_end = False
+  PWM_OFF()
+  print("\nDetect handler")
+  pass
 
 if __name__ == "__main__":
     # SIGTERM が発生した時の handler の登録
