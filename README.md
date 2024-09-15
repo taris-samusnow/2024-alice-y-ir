@@ -4,6 +4,8 @@
 ### 裏返しQuestion
 [裏返しQuestion 実機動作 Ver. 台座LED音声同期 - youtube](https://youtu.be/WOVJcwIXOF4)  
 [裏返しQuestion 実機動作 Ver. 台座LED点灯 - youtube](https://youtu.be/_IWyHbW6bI0)
+[裏返しQuestion 実機動作 Ver. ライトテープα版 - youtube](https://youtu.be/FfOFWuBOSlY)
+
 ### I'm Home
 [I'm Home 実機動作 - youtube](https://youtu.be/4VQbO1dTzNg)
 
