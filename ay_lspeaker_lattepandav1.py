@@ -45,6 +45,73 @@ gblue           = 0
 gthread1        = 0
 gflag_color_palet_end = True
 
+glight_list = [
+    [1.0,1.0,1.0],
+    [0.0,1.0,1.0],
+    [0.0,0.9,1.0],
+    [0.0,0.8,1.0],
+    [0.0,0.7,1.0],
+    [0.0,0.6,1.0],
+    [0.0,0.5,1.0],
+    [0.0,0.4,1.0],
+    [0.0,0.3,1.0],
+    [0.0,0.2,1.0],
+    [0.0,0.1,1.0],
+    [0.0,0.0,1.0],
+    [0.1,0.0,1.0],
+    [0.2,0.0,1.0],
+    [0.3,0.0,1.0],
+    [0.4,0.0,1.0],
+    [0.5,0.0,1.0],
+    [0.6,0.0,1.0],
+    [0.7,0.0,1.0],
+    [0.8,0.0,1.0],
+    [0.9,0.0,1.0],
+    [1.0,0.0,1.0],
+    [1.0,0.0,0.9],
+    [1.0,0.0,0.8],
+    [1.0,0.0,0.7],
+    [1.0,0.0,0.9],
+    [1.0,0.0,0.6],
+    [1.0,0.0,0.5],
+    [1.0,0.0,0.4],
+    [1.0,0.0,0.3],
+    [1.0,0.0,0.2],
+    [1.0,0.0,0.1],
+    [1.0,0.0,0.0],
+    [1.0,0.1,0.0],
+    [1.0,0.2,0.0],
+    [1.0,0.3,0.0],
+    [1.0,0.4,0.0],
+    [1.0,0.5,0.0],
+    [1.0,0.6,0.0],
+    [1.0,0.7,0.0],
+    [1.0,0.8,0.0],
+    [1.0,0.9,0.0],
+    [1.0,1.0,0.0],
+    [0.9,1.0,0.0],
+    [0.8,1.0,0.0],
+    [0.7,1.0,0.0],
+    [0.6,1.0,0.0],
+    [0.5,1.0,0.0],
+    [0.4,1.0,0.0],
+    [0.3,1.0,0.0],
+    [0.2,1.0,0.0],
+    [0.1,1.0,0.0],
+    [0.0,1.0,0.0],
+    [0.0,1.0,0.1],
+    [0.0,1.0,0.2],
+    [0.0,1.0,0.3],
+    [0.0,1.0,0.4],
+    [0.0,1.0,0.5],
+    [0.0,1.0,0.6],
+    [0.0,1.0,0.7],
+    [0.0,1.0,0.8],
+    [0.0,1.0,0.9],
+    [0.0,1.0,1.0],
+    [0.0,0.0,0.0],
+  ]
+
 class MicrophoneStream:
     """マイク音声入力のためのクラス."""
 
@@ -127,7 +194,38 @@ class MicrophoneStream:
         power = 20 * math.log10(rms) if rms > 0.0 else -math.inf  # RMSからデシベルへ
 
         return power
-    
+def on_light(clr_list):
+  global glight_list
+  #print("\nlight_list",clr_list)
+
+  light_list2 = [
+    [0,1,1],     
+    [0,1,1],
+    [0,0.9555,1],
+    [0,0.655,1],
+    [1,0,1],
+    [1,1,0],
+    [0.1,0.95,0.3],
+    [0,1,0.755],
+    [0,0,0],
+    [0,1,1],
+    [0,0.9555,1],
+    [0,0.655,1],
+    [1,0,1],
+    [1,1,0],
+    [0.1,0.95,0.3],
+    [0,1,0.755],
+    [0,0,0]
+  ]
+  red,tgreen,blue = glight_list[clr_list]
+  
+  gpin5.write(red)
+  green = tgreen * 1.9
+  if green > 1:
+    green = 1
+  gpin6.write(green)
+  gpin3.write(blue)
+
 def color_palet():
   global gred
   global ggreen
@@ -219,11 +317,7 @@ def main(chunk_size=8000):
     Args:
        chunk_size (int): 音声データを受け取る単位（サンプル数）
     """
-    global gred
-    global ggreen
-    global gblue
-    global gflag_color_palet_end
-
+    global glight_list
     # 入力デバイス情報に基づき、サンプリング周波数の情報を取得
     input_device_info = sd.query_devices(kind="input")
     sample_rate = int(input_device_info["default_samplerate"])
@@ -231,9 +325,8 @@ def main(chunk_size=8000):
     # マイク入力
     mic_stream = MicrophoneStream(sample_rate, chunk_size)
     
-    bf_specmax = 0 
-    pwm_flag = True
-    thread1 = threading.Thread(target=color_palet)
+    level=round((100-SP)/(len(glight_list)-1),2)
+    print(level)
     # GPIO 初期化処理
     PWM_INIT()
 
@@ -250,63 +343,150 @@ def main(chunk_size=8000):
     try:
         #print("＜収録開始＞")
         mic_stream.open_stream()  # 入力ストリームを開く準備
-        thread1.start()
+        #thread1.start()
         with mic_stream.input_stream:  # 入力ストリームから音声取得
             audio_generator = mic_stream.generator()  # 音声データ（のカタマリ）
             for data in audio_generator:  # チャンクごとに情報を表示してモニタリング
                 power = mic_stream.compute_power_fo(data)  # 音声パワーと基本周波数を取得
-                # print(
-                #    "\r" + f"音声パワー {power:5.4f}[dB] ",
-                #   end="",
-                # )
+                print(
+                   "\r" + f"音声パワー {power:5.4f}[dB] ",
+                  end="",
+                )
                 
                 # デジベルが100を越えた場合は100デジベルとして扱う
                 if power > 100:
                     power = 100
-                
                 # SP以下のデジベルは無音区間として扱う
                 if power <= SP:
-                  if pwm_flag == True:
-                    if FUCN2 == 1:
-                      PWM_STANDBY()
-                    else:
-                      PWM_STOP()
-                    pwm_flag = False
+                  on_light(0)
+                elif power <= (SP + level * 1):
+                  on_light(1)
+                elif power <= (SP + level * 2):
+                  on_light(2)
+                elif power <= (SP + level * 3):
+                  on_light(3)
+                elif power <= (SP + level * 4):
+                  on_light(4)
+                elif power <= (SP + level * 5):
+                  on_light(5)
+                elif power <= (SP + level * 6):
+                  on_light(6)
+                elif power <= (SP + level * 7):
+                  on_light(7)
+                elif power <= (SP + level * 8):
+                  on_light(8)
+                elif power <= (SP + level * 9):
+                  on_light(9)
+                elif power <= (SP + level * 10):
+                  on_light(10)
+                elif power <= (SP + level * 11):
+                  on_light(11)
+                elif power <= (SP + level * 12):
+                  on_light(12)
+                elif power <= (SP + level * 13):
+                  on_light(13)
+                elif power <= (SP + level * 14):
+                  on_light(14)
+                elif power <= (SP + level * 15):
+                  on_light(15)
+                elif power <= (SP + level * 16):
+                  on_light(16)
+                elif power <= (SP + level * 17):
+                  on_light(17)
+                elif power <= (SP + level * 18):
+                  on_light(18)
+                elif power <= (SP + level * 19):
+                  on_light(19)
+                elif power <= (SP + level * 20):
+                  on_light(20)
+                elif power <= (SP + level * 21):
+                  on_light(21)
+                elif power <= (SP + level * 22):
+                  on_light(22)
+                elif power <= (SP + level * 23):
+                  on_light(23)
+                elif power <= (SP + level * 24):
+                  on_light(24)
+                elif power <= (SP + level * 25):
+                  on_light(25)
+                elif power <= (SP + level * 26):
+                  on_light(26)
+                elif power <= (SP + level * 27):
+                  on_light(27)
+                elif power <= (SP + level * 28):
+                  on_light(28)
+                elif power <= (SP + level * 29):
+                  on_light(29)
+                elif power <= (SP + level * 30):
+                  on_light(30)
+                elif power <= (SP + level * 31):
+                  on_light(31)
+                elif power <= (SP + level * 32):
+                  on_light(32)
+                elif power <= (SP + level * 33):
+                  on_light(33)
+                elif power <= (SP + level * 34):
+                  on_light(34)
+                elif power <= (SP + level * 35):
+                  on_light(35)
+                elif power <= (SP + level * 36):
+                  on_light(36)
+                elif power <= (SP + level * 37):
+                  on_light(37)
+                elif power <= (SP + level * 38):
+                  on_light(38)
+                elif power <= (SP + level * 39):
+                  on_light(39)
+                elif power <= (SP + level * 40):
+                  on_light(40)
+                elif power <= (SP + level * 41):
+                  on_light(41)
+                elif power <= (SP + level * 42):
+                  on_light(32)
+                elif power <= (SP + level * 43):
+                  on_light(33)
+                elif power <= (SP + level * 44):
+                  on_light(34)
+                elif power <= (SP + level * 45):
+                  on_light(35)
+                elif power <= (SP + level * 46):
+                  on_light(36)
+                elif power <= (SP + level * 47):
+                  on_light(37)
+                elif power <= (SP + level * 48):
+                  on_light(38)
+                elif power <= (SP + level * 49):
+                  on_light(49)
+                elif power <= (SP + level * 50):
+                  on_light(50)
+                elif power <= (SP + level * 51):
+                  on_light(51)
+                elif power <= (SP + level * 52):
+                  on_light(52)
+                elif power <= (SP + level * 53):
+                  on_light(53)
+                elif power <= (SP + level * 54):
+                  on_light(54)
+                elif power <= (SP + level * 55):
+                  on_light(55)
+                elif power <= (SP + level * 56):
+                  on_light(56)
+                elif power <= (SP + level * 57):
+                  on_light(57)
+                elif power <= (SP + level * 58):
+                  on_light(58)
+                elif power <= (SP + level * 59):
+                  on_light(59)
+                elif power <= (SP + level * 60):
+                  on_light(60)
+                elif power <= (SP + level * 61):
+                  on_light(61)
+                elif power <= (SP + level * 62):
+                  on_light(62)
+                elif power <= (SP + level * 63):
+                  on_light(63)
                 else:
-                  if pwm_flag == False:
-                    PWM_START()
-                    pwm_flag = True
-                  if power >= bf_specmax:
-                    # (95 - power) で PWMによる光量を補う
-                    #if power != 100:
-                    #  freq = round(power + (95 - power), -1)
-                    #else:
-                    #freq = round(power, -1)
-                    freq = power
-                  elif power < bf_specmax:
-                    if (bf_specmax - power) > BA_DIFF:
-                      freq = 0
-                  freq=freq/100
-                  # PWMによりライトの強弱を操作する。
-                  #gpin3.write(1.0-freq)
-                  #gpin5.write(1.0-freq)
-                  #gpin6.write(1.0-freq)
-                  if freq == 0:
-                    gpin5.write(1)
-                    gpin6.write(1)
-                    gpin3.write(1)
-                  else:
-                    gpin5.write(gred)
-                    green = ggreen * 1.5
-                    if (green) > 1:
-                      green = 1
-                    gpin6.write(green)
-                    gpin3.write(gblue)
-
-                  if FUCN2 == 0:
-                    gpin11.write(freq)
-                  
-                  bf_specmax = power
+                  on_light(63)
                 continue
     except KeyboardInterrupt:  # Ctrl-C (MacだとCommand-C) で強制終了
         print("\nKeyboardInterrupt")
@@ -315,7 +495,6 @@ def main(chunk_size=8000):
     finally:
         gflag_color_palet_end = False
         PWM_OFF()
-        thread1.join()
         print("\n＜収録終了＞")
 
 def PWM_INIT():
@@ -377,7 +556,6 @@ def PWM_OFF():
     return
 
 def handler(signum, frame):
-  gflag_color_palet_end = False
   PWM_OFF()
   print("\nDetect handler")
   pass
